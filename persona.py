@@ -22,8 +22,8 @@ class Persona:
 
     def plan(self, name, new_day , user):
         return plan(self ,new_day , user)
-
-
+    
+    
 
 
 

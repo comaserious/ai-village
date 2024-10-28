@@ -50,6 +50,19 @@ def check_file_exists(filepath):
     else :
         print(f"{filepath} 파일이 존재하지 않습니다.")
         return False
+    
 
+# scratch data 업데이트
+def update_daily_req(uid, name , new_data):
+    # 파일 경로 생성
+    filepath = f"memory_storage/{uid}/{name}/scratch.json"
+
+    with  open(filepath, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+
+    data['daily_req'] = {**data['daily_req'], **new_data}
+
+    with open(filepath, 'w', encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False, indent=4)
 
 

@@ -41,28 +41,64 @@ def first_day_persona(name , user):
 # test 용
 # first_day_persona("Joy", user)
 
+# 새로운 날의 스케쥴 생성
 def new_day_plan( persona , user ):
 
     today = datetime.today()
 
     formatted_date = today.strftime("%Y-%m-%d")
 
+    def __func_clean_up(gpt_response):
+        schedule_array = []
+        
+        for line in gpt_response.split('\n'):
+            # 줄이 비어 있거나 ')'가 포함되어 있지 않은 경우 건너뜀
+            if line.strip() and ')' in line:
+                try:
+                    # 줄을 분리하고 두 번째 요소를 추가
+                    schedule_array.append(line.split(') ')[1].strip())
+                except IndexError:
+                    # 예외가 발생하면 해당 줄을 건너뜀
+                    continue
+
+                format = { formatted_date : schedule_array }
+        return format
+    
+    def set_curr_date(persona, formatted_date):
+        with open(f"memory_storage/{user['uid']}/{persona.name}/scratch.json", 'r', encoding='utf-8') as file:
+            data = json.load(file)
+
+        data['curr_date'] = formatted_date
+
+        persona.scratch.curr_date = formatted_date
+
+        with open(f"memory_storage/{user['uid']}/{persona.name}/scratch.json", 'w', encoding='utf-8') as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
+
+
+    
+    set_curr_date(persona , formatted_date)
+
     response = wake_up_time(persona , today)
 
-    filepath = f"memory_storage/{user['uid']/{persona.name}}"
+    filepath = f"memory_storage/{user['uid']}/{persona.name}/scratch.json"
 
     persona_scratch = load_persona_data(filepath)
 
-    persona_scratch.get('wake_up_time')= wake_up_time
-
     prompt = f"""
-    # Input
-    Today is {formatted_date}. You plan to wake up {response}. You have the following personal details: {persona.scratch.get_str_iss()}.
-    Please analyze {persona.scratch.get_str_iss()} and create your schedule today by hourly interval in the format of an Example. Speak in Korean
 
-    # Example
-    1) am ~ am: 
-    """
+    {persona.scratch.get_str_iss()}
+
+    Answer in Korean
+
+    In general, {persona.scratch.get_str_lifestyle()}
+
+    Today is {formatted_date}. Here is {persona.name}'s plan today in broad-strokes (with the time of the day. e.g., have a lunch at 12:00 pm, watch TV from 7 to 8 pm): 
+
+    1) wake up and complete the morning routine at {response}, 
+    2)  # 다음 항목을 여기에 추가하세요
+
+"""
 
     llm = ChatOpenAI(
         temperature= 0,
@@ -73,7 +109,13 @@ def new_day_plan( persona , user ):
 
     print(response.content)
 
-    filepath = f''
+    daily_req = __func_clean_up(response.content)
+
+    update_daily_req(user['uid'], persona.name , daily_req)
+
+    persona.scratch.daily_req = daily_req[formatted_date]
+
+
 
 
 
