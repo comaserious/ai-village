@@ -86,6 +86,8 @@ def new_day_plan( persona , user ):
 
     persona_scratch = load_persona_data(filepath)
 
+    map_data = json.load(open('memory_storage\DwgZh7Ud7STbVBnkyvK5kmxUIzw1\Joy\spatial.json'))
+
     prompt = f"""
 
     {persona.scratch.get_str_iss()}
@@ -93,6 +95,14 @@ def new_day_plan( persona , user ):
     Answer in Korean
 
     In general, {persona.scratch.get_str_lifestyle()}
+
+    너는 지금 {map_data} 이러한 세계에 살고 있습니다.
+
+    x 축 또는 y축의 값이 1 증가해서 이동할 경우 1분 걸리는걸로 합니다.
+
+    모든 계획은 어디서 시작하고 어디서 끝날지 명확하게 좌표로 작성해주세요.
+
+    공간의 이동의 경우 계획에 시작과 끝을 작성하고 계획을 이동 그리고 걸리는 시간을 작성해주세요.
 
     Today is {formatted_date}. Here is {persona.name}'s plan today in broad-strokes (with the time of the day. e.g., have a lunch at 12:00 pm, watch TV from 7 to 8 pm): 
 

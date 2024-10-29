@@ -3,6 +3,8 @@ from memory_structure.scratch import *
 from global_method import *
 from run_gpt import *
 from plan import *
+from spacial_memory.spacial import *
+from spacial_memory.maze import *
 
 # persona 객체 생성
 
@@ -19,6 +21,7 @@ class Persona:
 
         self.name = name
         self.scratch = Scratch(scratch_saved)
+        self.spatial_memory = SpatialMemory(map_matrix, zone_labels)
 
     def plan(self, name, new_day , user):
         return plan(self ,new_day , user)

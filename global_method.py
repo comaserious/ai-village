@@ -11,6 +11,8 @@ def load_persona_data( filepath):
             data = json.load(file)
             return data
     else:
+        # 디렉토리가 없을 경우 생성
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
         # 존재하지 않을 경우
         default_data = {}
         with open(file_path, 'w') as file:
