@@ -3,6 +3,7 @@ import json
 from dotenv import load_dotenv
 from global_method import *
 from datetime import datetime
+import re
 
 load_dotenv()
 
@@ -114,6 +115,69 @@ def new_day_plan( persona , user ):
     update_daily_req(user['uid'], persona.name , daily_req)
 
     persona.scratch.daily_req = daily_req[formatted_date]
+
+
+def daily_plan_hourly(persona , user):
+
+    now = datetime.now()
+
+    formatted_time = now.strftime("%H:%M:%S")
+
+    prompt = f"""
+    {persona.scratch.get_str_iss()}
+
+    당신은 '{persona.name}'입니다.
+    
+    오늘의 주요 일정은 "{persona.scratch.daily_req}"입니다.
+    
+    오늘의 일정을 고려하여, **모든 시간을 반드시 '활동, X분' 형식으로 작성**해 주세요. 일상적인 활동 외에 특별한 아이디어나 새로운 활동을 추가해도 좋습니다.
+
+    **작성 시 지켜야 할 형식**:
+    - 각 활동은 반드시 한 줄로 작성하며, "활동, X분" 형식을 유지해 주세요.
+    - 예시:
+      - "일어나서 칫솔질, 5분"
+      - "아침 운동, 30분"
+      - "창밖을 보며 커피 한 잔의 여유, 10분"
+
+    **지침**:
+    - 모든 활동은 간단하고 명확하게 작성해 주세요.
+    - 시간을 '분' 단위로만 작성해 주세요.
+    - 창의적인 활동을 추가하여 오늘을 특별하게 만들어보세요!
+
+    이제 당신의 계획을 작성해 주세요.
+""" 
+
+    llm = ChatOpenAI(
+        temperature=0.8,
+        model = "gpt-4o-mini",
+    )
+
+    response = llm.invoke(prompt)
+
+    print(response.content)
+
+    # 빈 리스트 생성
+    events = []
+
+    # 각 줄을 분리하여 반복 처리
+    for line in response.content.split("\n"):
+    # 각 줄을 ", "를 기준으로 분리
+        parts = line.split(", ")
+        if len(parts) == 2:
+            task = parts[0].strip('- "')
+            duration_text = parts[1].strip()
+            # "시간"을 분 단위로 변환
+            match = re.search(r'\d+', duration_text)
+            if match:
+                duration = int(match.group())
+                events.append([task, f"{duration}"])
+
+    # 결과 출력
+    print(events)
+
+
+    update_daily_req_hourly(user['uid'], persona.name , events)
+
 
 
 

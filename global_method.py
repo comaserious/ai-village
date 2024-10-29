@@ -66,3 +66,15 @@ def update_daily_req(uid, name , new_data):
         json.dump(data, file, ensure_ascii=False, indent=4)
 
 
+
+# 시간당 스케쥴 업데이트
+def update_daily_req_hourly(uid, name, new_data):
+    filepath = f"memory_storage/{uid}/{name}/scratch.json"
+
+    with open(filepath, 'r', encoding='utf-8') as file:
+        data = json.load(file)
+
+    data['daily_req_hourly'] = new_data
+
+    with open(filepath, 'w', encoding='utf-8') as file:
+        json.dump(data, file, ensure_ascii=False, indent=4)

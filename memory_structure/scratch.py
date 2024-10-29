@@ -19,13 +19,13 @@ class Scratch:
     
     def get_str_iss(self):
         common_state = '';
-        common_state += f"Name : {self.s_mem_data['name']}"
-        common_state += f"Age : {self.s_mem_data['age']}"
-        common_state += f"Personality : {self.s_mem_data['personality']}"
-        common_state += f"Speech : {self.s_mem_data['speech']}"
-        common_state += f"Life Style : {self.s_mem_data['lifestyle']}"
-        common_state += f"Gender : {self.s_mem_data['gender']}"
-        common_state += f"Character : {self.s_mem_data['character']}"
+        common_state += f"Name : {self.s_mem_data['name']} \n"
+        common_state += f"Age : {self.s_mem_data['age']} \n"
+        common_state += f"Personality : {self.s_mem_data['personality']} \n"
+        common_state += f"Speech : {self.s_mem_data['speech']} \n"
+        common_state += f"Life Style : {self.s_mem_data['lifestyle']} \n"
+        common_state += f"Gender : {self.s_mem_data['gender']} \n"
+        common_state += f"Character : {self.s_mem_data['character']} \n"
 
         return common_state
     
