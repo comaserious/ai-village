@@ -14,6 +14,8 @@ class Scratch:
         self.lifestyle = None;
         self.name = None;
     
+        
+    
 
     
     

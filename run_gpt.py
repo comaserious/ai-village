@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from global_method import *
 from datetime import datetime
 import re
+from prompt import *
 
 load_dotenv()
 
@@ -86,7 +87,7 @@ def new_day_plan( persona , user ):
 
     persona_scratch = load_persona_data(filepath)
 
-    map_data = json.load(open('memory_storage\DwgZh7Ud7STbVBnkyvK5kmxUIzw1\Joy\spatial.json'))
+    
 
     prompt = f"""
 
@@ -95,14 +96,6 @@ def new_day_plan( persona , user ):
     Answer in Korean
 
     In general, {persona.scratch.get_str_lifestyle()}
-
-    너는 지금 {map_data} 이러한 세계에 살고 있습니다.
-
-    x 축 또는 y축의 값이 1 증가해서 이동할 경우 1분 걸리는걸로 합니다.
-
-    모든 계획은 어디서 시작하고 어디서 끝날지 명확하게 좌표로 작성해주세요.
-
-    공간의 이동의 경우 계획에 시작과 끝을 작성하고 계획을 이동 그리고 걸리는 시간을 작성해주세요.
 
     Today is {formatted_date}. Here is {persona.name}'s plan today in broad-strokes (with the time of the day. e.g., have a lunch at 12:00 pm, watch TV from 7 to 8 pm): 
 
@@ -158,7 +151,7 @@ def daily_plan_hourly(persona , user):
 """ 
 
     llm = ChatOpenAI(
-        temperature=0.8,
+        temperature=0.2,
         model = "gpt-4o-mini",
     )
 
@@ -191,8 +184,6 @@ def daily_plan_hourly(persona , user):
 
 
 
-
-
 def wake_up_time(persona , day):
     prompt = f"""
         # Input
@@ -214,3 +205,77 @@ def wake_up_time(persona , day):
     print(response.content)
 
     return response.content.replace('Exam','')
+
+
+
+
+
+# spatial_data => data spatial.json 값
+def plan_daily_route(daily_activity, spatial_data,persona):
+    current_position = spatial_data["zones"][f"{persona.name}_home"]["positions"][0] #시작점
+    route_plan = []
+
+    for activity , duration in daily_activity: # <- 이부분 개선이 필요할듯
+
+        prompt = create_location_prompt(persona, activity, duration, current_position)
+
+        llm = ChatOpenAI(
+            temperature=0.8,
+            model = "gpt-4o-mini",
+        )
+
+        location_info = llm.invoke(prompt).content
+
+        location_info = location_info.replace("```json","").replace("```","")
+
+        location_info = json.loads(location_info)
+
+        print(location_info)
+
+        route_plan.append({
+            "activity" : activity,
+            "location" : location_info["position"],
+            "duration" : duration,
+            "zone" : location_info["zone"]
+        })
+
+        current_position = location_info["position"]
+
+    return route_plan
+
+
+# ==========================================================================================
+
+def create_full_schedule(route_plan, spatial_data, persona):
+    complete_schedule = []
+
+    for i in range(len(route_plan)-1):
+        current = route_plan[i]
+        next_activity = route_plan[i+1]
+
+        complete_schedule.append({
+            "type" : "stay",
+            "location" : current["location"],
+            "duration" : current["duration"]
+        })
+
+
+        path = get_path_between_points(
+            current["location"],
+            next_activity["location"],
+            spatial_data
+        )
+
+        complete_schedule.append({
+            "type" : "path",
+            "path" : path
+        })
+
+    return complete_schedule
+
+
+
+
+
+
+

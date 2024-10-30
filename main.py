@@ -1,8 +1,8 @@
 from persona import Persona
 from run_gpt import daily_plan_hourly
 import json
-from spacial_memory.spacial import *
-from spacial_memory.maze import *
+from spatial_memory.spatial import *
+from spatial_memory.maze import *
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
@@ -22,6 +22,8 @@ joy_persona.plan("Joy",True, user)
 print(joy_persona.scratch.daily_req)
 
 daily_plan_hourly(joy_persona , user)
+
+
 
 
 
