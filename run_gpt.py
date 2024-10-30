@@ -5,6 +5,9 @@ from global_method import *
 from datetime import datetime
 import re
 from prompt import *
+import numpy as np
+from spatial_memory.spatial import PathFinder, Position
+from spatial_memory.maze import map_matrix, zone_labels
 
 load_dotenv()
 
@@ -215,9 +218,14 @@ def plan_daily_route(daily_activity, spatial_data,persona):
     current_position = spatial_data["zones"][f"{persona.name}_home"]["positions"][0] #시작점
     route_plan = []
 
-    for activity , duration in daily_activity: # <- 이부분 개선이 필요할듯
 
-        prompt = create_location_prompt(persona, activity, duration, current_position)
+
+    for activity_obj in daily_activity: # <- 이부분 개선이 필요할듯
+        activity = activity_obj["activity"]
+        duration = activity_obj["duration"]
+
+        
+        prompt = create_location_prompt(persona, activity, duration, current_position, spatial_data)
 
         llm = ChatOpenAI(
             temperature=0.8,
@@ -230,7 +238,7 @@ def plan_daily_route(daily_activity, spatial_data,persona):
 
         location_info = json.loads(location_info)
 
-        print(location_info)
+        print("location_info 활동 정보 값",location_info)
 
         route_plan.append({
             "activity" : activity,
@@ -246,32 +254,79 @@ def plan_daily_route(daily_activity, spatial_data,persona):
 
 # ==========================================================================================
 
-def create_full_schedule(route_plan, spatial_data, persona):
+def create_full_schedule(route_plan, spatial_data,persona):
+    """
+    일정과 이동 경로를 포함한 전체 스케줄을 생성합니다.
+    """
     complete_schedule = []
-
-    for i in range(len(route_plan)-1):
+    
+    for i in range(len(route_plan)):
         current = route_plan[i]
-        next_activity = route_plan[i+1]
-
+        
+        # 현재 활동 추가
         complete_schedule.append({
-            "type" : "stay",
-            "location" : current["location"],
-            "duration" : current["duration"]
+            "type": "activity",
+            "activity": current["activity"],
+            "location": current["location"],
+            "duration": int(current["duration"]),
+            "zone": current["zone"]
         })
-
-
-        path = get_path_between_points(
-            current["location"],
-            next_activity["location"],
-            spatial_data
-        )
-
-        complete_schedule.append({
-            "type" : "path",
-            "path" : path
-        })
-
+        
+        # 다음 활동이 있는 경우 이동 경로 추가
+        if i < len(route_plan) - 1:
+            next_activity = route_plan[i + 1]
+            
+            # 현재 위치와 다음 위치가 다른 경우에만 경로 계산
+            if current["location"] != next_activity["location"]:
+                path = get_path_between_points(
+                    current["location"],
+                    next_activity["location"],
+                    spatial_data
+                )
+                
+                # 경로가 존재하고 두 점 이상의 경로가 있는 경우에만 이동 추가
+                if path and len(path) > 1:
+                    complete_schedule.append({
+                        "type": "movement",
+                        "path": path,
+                        "start_zone": current["zone"],
+                        "end_zone": next_activity["zone"],
+                        "duration": len(path) - 1  # 각 스텝당 1분으로 가정
+                    })
+    
     return complete_schedule
+
+
+def get_path_between_points(start, end, spatial_data):
+    """
+    spatial.py의 PathFinder를 사용하여 두 점 사이의 경로를 찾습니다.
+    
+    Args:
+        start: [x, y] 시작 좌표
+        end: [x, y] 도착 좌표
+        spatial_data: 공간 데이터
+    
+    Returns:
+        path: 경로 좌표 리스트
+    """
+    # numpy array로 변환
+    maze_matrix = np.array(map_matrix)
+    pathfinder = PathFinder(maze_matrix)
+    
+    # Position 객체로 변환
+    start_pos = Position(start[0], start[1])
+    end_pos = Position(end[0], end[1])
+    
+    # 경로 찾기
+    path_result = pathfinder.find_shortest_path(start_pos, end_pos)
+    
+    if path_result:
+        path, cost = path_result
+        # Position 객체 리스트를 좌표 리스트로 변환
+        return [[p.x, p.y] for p in path]
+    else:
+        print(f"경로를 찾을 수 없습니다: {start} -> {end}")
+        return [start, end]
 
 
 

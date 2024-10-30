@@ -39,5 +39,12 @@ spatial_data = json.load(open(f"memory_storage/{user['uid']}/Joy/spatial.json"))
 
 route_plan = plan_daily_route(daily_activity , spatial_data , joy_persona)
 
-# print(route_plan)
+print(route_plan)
+
+
+complete_schedule = create_full_schedule(route_plan , spatial_data , joy_persona)
+
+print(complete_schedule)
+
+
 
