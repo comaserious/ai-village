@@ -1,0 +1,107 @@
+{
+  "Joy": {
+    "Anger": {
+      "relationship_type": "반복되는 갈등을 극복하려 하는 동반자 관계",
+      "closeness": "6",
+      "dynamics": "Joy는 항상 상황을 긍정적으로 바라보고 Anger의 분노를 진정시키려 노력하는 과정에서 자신도 모르게 Anger와의 깊은 관계를 형성하려 합니다. 그러나 Anger의 시각에서는 Joy의 끊임없는 긍정이 때로는 현실을 외면하는 것처럼 느껴질 수 있습니다.",
+      "interaction_style": "Joy는 대화 중 감정적 지원과 격려를 중심으로 한 상호작용을 선호하지만, Anger는 좀 더 직설적이고 문제 해결 중심의 접근을 선호합니다.",
+      "common_activities": [
+        "명상 클래스 참여",
+        "감정 조절을 위한 운동 같이 하기",
+        "자연 속에서의 휴식과 산책",
+        "감정을 나눌 수 있는 북클럽 활동"
+      ],
+      "potential_conflicts": [
+        "Anger의 직설적인 태도와 공격적인 반응에 Joy가 상처받을 수 있음",
+        "Joy의 지나친 낙관주의가 Anger를 더욱 좌절시킬 수 있음",
+        "갈등 상황에서의 커뮤니케이션 방식 차이"
+      ]
+    },
+    "Sadness": {
+      "relationship_type": "서로의 감정을 이해하고 공감하는 깊은 우정",
+      "closeness": "8",
+      "dynamics": "Joy는 Sadness를 밝고 긍정적인 에너지로 끌어올리려 노력하지만, 때로는 Sadness의 깊은 감정을 완전히 이해하기 어려워합니다. Sadness의 내성적이고 감정적인 깊이를 존중하면서도, Joy는 Sadness를 더 활발하고 사회적인 활동으로 이끌고 싶어합니다. Joy는 자신의 긍정적 태도와 에너지가 Sadness에게 힘이 될 수 있다고 믿으며, Sadness의 슬픔을 경감시키고 싶어하는 마음에서 출발합니다.",
+      "interaction_style": "기분을 전환하고자 하는 경쾌하고 활발한 상호작용",
+      "common_activities": [
+        "자연 속 산책",
+        "함께 하는 창작 활동",
+        "긍정적인 영화나 책 나누기",
+        "명상 및 긍정적 사고에 대한 대화",
+        "소소한 일상의 행복을 공유하는 시간"
+      ],
+      "potential_conflicts": [
+        "Joy가 Sadness의 깊은 감정을 가볍게 여길 수 있음",
+        "Sadness가 Joy의 지속적인 긍정성에 압박감을 느낄 수 있음",
+        "Joy의 활동적인 제안이 Sadness에게 때로는 과도하게 느껴질 수 있음"
+      ]
+    }
+  },
+  "Anger": {
+    "Joy": {
+      "relationship_type": "복잡한 조화",
+      "closeness": "6",
+      "dynamics": "Anger는 Joy의 낙천주의를 진심 어린 감정의 표현이라기보다는 때로 현실 도피적이거나 너무 단순화된 반응으로 볼 수 있습니다. 그러나 Anger는 Joy가 상황을 긍정적으로 바라보려는 시도에 대해 어느 정도 존중합니다. Anger는 자신과 다른 Joy의 감정 표현 방식에 대해 이해하려 노력하지만, 종종 Joy의 방식이 자신에게는 맞지 않는다고 느낍니다.",
+      "interaction_style": "열렬한 토론과 깊은 대화",
+      "common_activities": [
+        "토론 모임 참여",
+        "갈등 해결 관련 워크샵",
+        "서로의 관점을 이해하기 위한 책 읽기"
+      ],
+      "potential_conflicts": [
+        "Joy의 무한한 낙관주의에 Anger가 현실적 문제를 제대로 인식하고 대처하지 않는다고 생각하는 점",
+        "Joy가 Anger의 분노 혹은 불만을 너무 쉽게 긍정으로 돌리려고 시도할 때",
+        "Anger가 Joy의 행동을 피상적이라고 느낄 때"
+      ]
+    },
+    "Sadness": {
+      "relationship_type": "보호하려는 관계",
+      "closeness": "7",
+      "dynamics": "Anger는 자신의 강렬한 성격을 조절하려고 노력하며 Sadness의 감정적 깊이와 내성적인 성격에 대해 보호 본능을 느낍니다. 그는 Sadness가 우울하거나 슬픈 감정에 잠겼을 때 강한 지지자가 되고자 합니다.",
+      "interaction_style": "솔직하고 보호적인 대화, Sadness의 감정을 경청하고 이해하려는 노력을 포함하며, 때로는 Sadness를 위로하고 활력을 주고자 하는 시도",
+      "common_activities": [
+        "감정을 분출할 수 있는 스포츠 활동 같이 하기",
+        "감정적인 영화 관람 후 이야기 나누기",
+        "서로의 감정과 사상을 공유할 수 있는 조용한 카페 방문"
+      ],
+      "potential_conflicts": [
+        "Anger의 순간적인 분노 표현이 Sadness를 더욱 위축시킬 수 있음",
+        "Sadness의 내향적인 성향과 Anger의 외향적인 성향의 충돌",
+        "Anger가 정의감에서 비롯한 행동을 중요시하는 반면 Sadness는 감정적 깊이와 이해를 우선시해 갈등이 발생할 수 있음"
+      ]
+    }
+  },
+  "Sadness": {
+    "Joy": {
+      "relationship_type": "애매모호한 친구",
+      "closeness": "6",
+      "dynamics": "Sadness는 Joy의 끊임없는 긍정성과 활기에 압도당하기도 하지만, 동시에 Joy의 에너지와 낙천적 태도에 위안을 받습니다. Sadness는 종종 Joy가 자신의 우울함을 완전히 이해하지 못한다고 느끼며, 이로 인해 둘 사이에 어느 정도의 거리감이 존재합니다. 반면, Joy는 Sadness의 깊은 감정적 이해와 공감 능력을 높이 평가하며, Sadness를 더 행복하게 만들고자 노력합니다. 이런 노력은 때때로 Sadness에게 압박감으로 다가올 수 있습니다.",
+      "interaction_style": "깊은 대화와 공감대 형성",
+      "common_activities": [
+        "카페에서 조용한 대화 나누기",
+        "감정적으로 깊이 있는 영화나 책에 대해 토론하기",
+        "자연 속에서 조용한 산책"
+      ],
+      "potential_conflicts": [
+        "Joy의 지나치게 낙관적 태도가 Sadness에게 현실 도피처럼 느껴질 때",
+        "Sadness의 우울함이 Joy에게 부담스럽게 느껴지는 순간들",
+        "Sadness가 필요로 하는 공감과 이해보다 Joy가 더 적극적으로 긍정을 강조할 때"
+      ]
+    },
+    "Anger": {
+      "relationship_type": "복잡하고 긴밀한 이해 관계",
+      "closeness": "6",
+      "dynamics": "Sadness는 Anger의 감정적 극단을 깊이 이해하고 공감하며, Anger의 강렬함이 자신의 내면적인 우울함과 고독을 어느 정도 해소해 줄 수 있다고 느낀다. 그러나 Anger의 표출 방식이 때로는 Sadness를 압도할 수도 있어, 이들 사이의 관계는 섬세한 균형을 요구한다.",
+      "interaction_style": "깊은 대화와 서로의 감정을 세심하게 다루는 상호작용",
+      "common_activities": [
+        "서로의 감정을 솔직하게 나누는 시간",
+        "조용한 장소에서 서로를 위한 공간 만들기",
+        "감정적으로 의미 있는 영화나 음악 함께 경험하기"
+      ],
+      "potential_conflicts": [
+        "Anger의 즉각적이고 강한 감정 표출로 인한 Sadness의 감정적 과부하",
+        "Sadness의 내성적이고 감정적으로 깊이 있는 접근 방식이 Anger에게 공감되지 않는 경우",
+        "Anger의 감정적인 분출이 Sadness를 위협적으로 느끼게 할 때"
+      ]
+    }
+  }
+}

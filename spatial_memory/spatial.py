@@ -5,6 +5,7 @@ import json
 from collections import defaultdict
 import heapq
 from .maze import *
+# from maze import map_matrix, zone_labels
 
 import sys
 import os
@@ -542,10 +543,13 @@ def main():
 
 
     # 현재 위치 (예: 복도의 한 지점)
-    current_pos = Position(5, 5)
+    # current_pos = Position(5, 5)
+    start_zone = 2  # Joy_home
     target_zone = 11  # Library
     
-    path_result = spatial_memory.get_path_from_position(current_pos, target_zone)
+    # path_result = spatial_memory.get_path_from_position(current_pos, target_zone)
+
+    path_result = spatial_memory.get_path_between_zones(start_zone, target_zone)
     
     if path_result:
         path, cost = path_result

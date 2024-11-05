@@ -33,3 +33,16 @@ class Scratch:
     
     def get_str_lifestyle(self):
         return self.s_mem_data['lifestyle']
+    
+    def get_str_personality(self):
+        return self.s_mem_data['personality']
+    
+    def get_str_speech(self):
+        return self.s_mem_data['speech']
+    
+    def get_str_character(self):
+        return self.s_mem_data['character'] 
+    
+    def get_str_name(self):
+        return self.s_mem_data['name'] 
+    

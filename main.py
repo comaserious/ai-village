@@ -1,11 +1,14 @@
 from persona import Persona
-from run_gpt import daily_plan_hourly
+from run_gpt import *
 import json
 from spatial_memory.spatial import *
 from spatial_memory.maze import *
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 
+from agent_dialogue import *
+
+from talk_eachother import *
 
 load_dotenv()
 
@@ -13,15 +16,32 @@ user = json.load(open('test.json'))
 
 # 페르소나 생성
 joy_persona = Persona("Joy" , user)
+anger_persona = Persona("Anger" , user)
+sadness_persona = Persona("Sadness" , user)
+
+
+personas = [joy_persona, anger_persona, sadness_persona]
+
+# make_persona_association(personas, user)
+
+
+
+
+
+
+
+
+
+
 
 # 페르소나 스케쥴 생성
-joy_persona.plan("Joy",True, user)
+# joy_persona.plan("Joy",True, user)
 
 
 
-print(joy_persona.scratch.daily_req)
+# print(joy_persona.scratch.daily_req)
 
-daily_plan_hourly(joy_persona , user)
+# daily_plan_hourly(joy_persona , user)
 
 
 

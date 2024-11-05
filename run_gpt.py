@@ -330,6 +330,97 @@ def get_path_between_points(start, end, spatial_data):
 
 
 
+def make_persona_association(personas, user):
+    """페르소나 간의 사회적 관계를 생성합니다."""
+    relationships = {}
+    
+    for persona1 in personas:
+        relationships[persona1.name] = {}
+        for persona2 in personas:
+            if persona1.name != persona2.name:
+                prompt = f"""
+                당신은 복잡한 인간 관계와 심리를 분석하는 전문가입니다.
+                {persona1.name}의 관점에서 {persona2.name}와의 관계를 분석해주세요.
+
+                관점 주체 ({persona1.name}):
+                {persona1.scratch.get_str_iss()}
+
+                성격: {persona1.scratch.get_str_personality()}
+                
+                
+                상대방 ({persona2.name}):
+                {persona2.scratch.get_str_iss()}
+
+                성격: {persona2.scratch.get_str_personality()}
+                
+                
+                다음 사항들을 고려하여 {persona1.name}의 관점에서 관계를 설정해주세요:
+
+                1. {persona1.name}의 성격과 특징이 {persona2.name}를 어떻게 인식하고 평가하는지
+                2. {persona1.name}이 느끼는 친밀도는 {persona2.name}이 느끼는 것과 다를 수 있음
+                3. {persona1.name}의 가치관과 성격에 따라 관계를 바라보는 독특한 시각 반영
+                4. {persona1.name}이 선호하는 상호작용 방식과 활동이 {persona2.name}과 다를 수 있음
+                5. {persona1.name}이 특별히 민감하게 느끼는 갈등 포인트 고려
+
+                예시 차이점:
+                - Joy가 느끼는 Sadness와의 친밀도(8)와 Sadness가 느끼는 Joy와의 친밀도(6)는 다를 수 있음
+                - Anger는 특정 활동을 즐겁게 여기지만, 상대방은 부담스러워할 수 있음
+                - 한 쪽이 멘토 역할이라 생각하지만, 다른 쪽은 동등한 관계로 여길 수 있음
+
+                다음 JSON 형식으로 응답해주세요:
+                {{
+                    "relationship_type": "{persona1.name}이 생각하는 {persona2.name}과의 구체적 관계 유형",
+                    "closeness": "{persona1.name}이 느끼는 친밀도 (1-10)",
+                    "dynamics": "{persona1.name}의 관점에서 바라본 관계 역학",
+                    "interaction_style": "{persona1.name}이 선호하는 {persona2.name}과의 상호작용 방식",
+                    "common_activities": ["{persona1.name}이 {persona2.name}과 하고 싶어하는 활동들"],
+                    "potential_conflicts": ["{persona1.name}이 특히 민감하게 느끼는 갈등 요소들"]
+                }}
+                
+                각 페르소나의 성격과 MBTI 특성을 깊이 반영하여, 비대칭적이고 독특한 관계를 설정해주세요.
+                JSON 형식만 응답해주세요.
+                """
+                
+                llm = ChatOpenAI(
+                    temperature=1,
+                    model="gpt-4-0125-preview"
+                )
+                
+                try:
+                    response = llm.invoke(prompt)
+                    # JSON 부분만 추출하기 위한 처리
+                    content = response.content.strip()
+                    if content.startswith('```json'):
+                        content = content.replace('```json', '').replace('```', '').strip()
+                    
+                    relationship_data = json.loads(content)
+                    relationships[persona1.name][persona2.name] = relationship_data
+                    
+                    print(f"\n{persona1.name}와 {persona2.name}의 관계가 생성되었습니다.")
+                    
+                except json.JSONDecodeError as e:
+                    print(f"\nJSON 파싱 오류 ({persona1.name}-{persona2.name}): {e}")
+                    print(f"받은 응답: {response.content}")
+                    # 오류 시 기본 관계 설정
+                    relationships[persona1.name][persona2.name] = {
+                        "relationship_type": "지인",
+                        "closeness": 5,
+                        "dynamics": "일반적인 관계",
+                        "interaction_style": "기본적인 예의를 지키는 관계",
+                        "common_activities": ["가벼운 대화"],
+                        "potential_conflicts": ["특별한 갈등 없음"]
+                    }
+    
+    # 관계 정보를 파일로 저장
+    relationship_path = f"memory_storage/{user['uid']}/relationships.json"
+    with open(relationship_path, 'w', encoding='utf-8') as f:
+        json.dump(relationships, f, ensure_ascii=False, indent=2)
+    
+    # 각 페르소나의 관계 정보 업데이트
+    for persona in personas:
+        persona.load_relationships(user['uid'])
+    
+    return relationships
 
 
 

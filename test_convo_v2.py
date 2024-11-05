@@ -1,9 +1,7 @@
-from langchain_core.tools import tool
 from langchain_community.tools.tavily_search import TavilySearchResults
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_react_agent, AgentExecutor, Tool
 from langchain.prompts import ChatPromptTemplate
-from langchain import hub
 
 # 날짜 관련
 from datetime import datetime, timedelta
@@ -23,21 +21,16 @@ from langchain.retrievers import ParentDocumentRetriever
 from langchain.schema import Document
 from langchain_community.document_loaders import JSONLoader
 
-import uuid
-import pickle  # 추가
 import os
-import json
 from pathlib import Path
-
 
 PERSIST_DIRECTORY = "./chroma_db"
 
 # 저장소 디렉토리 생성
 os.makedirs(PERSIST_DIRECTORY, exist_ok=True)
 
-
-# JSONLoader 부분 수정
 text_path = "./memory_storage/DwgZh7Ud7STbVBnkyvK5kmxUIzw1/Joy/conversation.txt"
+
 loaders = []
 
 if os.path.exists(text_path):
@@ -48,21 +41,8 @@ docs = []
 for loader in loaders:
     docs.extend(loader.load())
 
-# 디버깅을 위한 출력
-print("로드된 문서 수:", len(docs))
-if docs:
-    print("첫 번째 문서 내용:", docs[0].page_content)
-
-
-
-
-
-
-
-# 문서 분할 설정
-parent_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=100)
-child_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=10)
-
+parent_splitter = RecursiveCharacterTextSplitter(chunk_size = 1000, chunk_overlap=100)
+child_splitter = RecursiveCharacterTextSplitter(chunk_size = 100, chunk_overlap=10)
 
 embeddings = OpenAIEmbeddings()
 
@@ -82,23 +62,16 @@ retriever = ParentDocumentRetriever(
     search_kwargs={"k": 5}
 )
 
-# docs가 비어있지 않을 때만 retriever에 추가
+# 디버깅을 위한 출력
+print("로드된 문서 수:", len(docs))
+
 if docs:
-    retriever.add_documents(docs)
+    print("첫 번째 문서 내용:", docs[0].page_content)
 
+retriever.add_documents(docs)
 
-
-
-
-# Tool
-def multiply(first_input : int , second_input : int ) -> int:
-    """Multiply two numbers"""
-
-    print("곱셈 함수",first_input, second_input)
-
-    return first_input * second_input
-
-
+#Tool
+# 웹 검색
 def search_web(query : str) -> str:
     """Search the web for information about a given query"""
     search = TavilySearchResults(
@@ -108,17 +81,19 @@ def search_web(query : str) -> str:
         include_domains=[],
     )
 
-    print("검색 결과===================================================================================")
+    print("=======================================검색 결과======================================")
     print(search.invoke(query))
 
     result = search.invoke(query)
 
     return result
 
-
+# 이전대화 검색
 def search_conversation(query: str) -> str:
     """이전 대화 내용에서 관련 정보를 검색합니다."""
-    print("대화 검색===================================================================================")
+    print("=================================대화 검색=============================================")
+    
+    print("검색 쿼리", query)
     
     try:
         # MMR 검색 사용
@@ -126,63 +101,67 @@ def search_conversation(query: str) -> str:
             query,
             k=5,  # 검색할 총 문서 수
             fetch_k=20,  # 후보 문서 수
-            lambda_mult=0.5  # 다양성 vs 관련성 균형 조절 (0: 최대 다양성, 1: 최대 관련성)
+            lambda_mult=0.5  # 다양성 vs 관련성 균형 조절
         )
+        
+        # retriever 결과 확인 및 예외 처리 추가
+        retriever_results = retriever.invoke(query)
+        context_result = retriever_results
+
+        print("문맥 정보", context_result)
+        print("=================================대화 검색 결과=============================================")
         
         if not results:
             return "관련된 대화 내용을 찾을 수 없습니다."
         
-        # 검색 결과 디버깅
-        print(f"검색된 문서 수: {len(results)}")
-        for i, doc in enumerate(results):
-            print(f"\n문서 {i+1}:")
-            print(f"내용: {doc.page_content}")
-            print(f"메타데이터: {doc.metadata}")
-        
-        # 컨텍스트 구성
-        context = "\n\n".join([
-            f"시간: {doc.metadata.get('timestamp', '시간 정보 없음')}\n"
-            f"내용: {doc.page_content}"
-            for doc in results
-        ])
-        
         prompt = f"""다음은 이전 대화의 관련 내용입니다:
 
-{context}
+{context_result}
 
 이 맥락을 바탕으로 질문에 답변해주세요: {query}
 """
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
         
         return llm.invoke(prompt)
     except Exception as e:
         print(f"검색 중 오류 발생: {e}")
-        return f"검색 중 오류가 발생했습니다: {str(e)}"
+        return "이전 대화 내용이 없거나 검색 중 오류가 발생했습니다."
+    
+
+# 일반적인 대화
+def general_chat(query: str) -> str:
+    """일반적인 대화를 처리합니다."""
+
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
+
+    prompt = f"""당신은 친근하고 도움이 되는 AI 어시스턴트입니다.
+다음 질문이나 대화에 자연스럽게 답변해주세요: {query}"""
+    
+    return llm.invoke(prompt).content
 
 
 
-
-# Tool 함수 정의
+# tool 바인딩
 
 tools = [
     Tool(
-        name = "multiply",
-        description = "Multiply two numbers",
-        func = multiply
-    ),
-    Tool(
         name = "search_web",
         description = "Search the web for information about a given query",
-        func = search_web
+        func = search_web,
     ),
     Tool(
         name = "search_conversation",
-        description = "Search the conversation for information about a given query",
-        func = search_conversation
+        description = "Search the conversation history for information about a given query",
+        func = search_conversation,
+    ),
+    Tool(
+        name = "general_chat",
+        description = "General conversation",
+        func = general_chat,
     )
 ]
 
-
-# 채팅 내용 저장
+# 채팅 내용 txt 저장
 def save_conversation_to_chroma(memory, conversation_id):
     # 저장 경로 설정
     base_path = Path("memory_storage/DwgZh7Ud7STbVBnkyvK5kmxUIzw1/Joy")
@@ -210,27 +189,7 @@ def save_conversation_to_chroma(memory, conversation_id):
     except Exception as e:
         print(f"저장 중 오류 발생: {e}")
         return f"저장 중 오류가 발생했습니다: {str(e)}"
-
-
-
-
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
-# 기존 프롬프트 가져오기
-# base_prompt = hub.pull("hwchase17/react-chat")
-
-# 시스템 메시지 수정
-
-
-
-conversation_id = "test_session"
-
-memory = InMemoryChatMessageHistory(session_id = conversation_id)
-
-
-
-
-
+    
 
 prompt = ChatPromptTemplate.from_messages([
     ("system", """당신은 도움을 주는 AI 어시스턴트입니다. 
@@ -261,7 +220,7 @@ Final Answer: 이전 대화에서 삼성 주식은 ...
 다음 상황서는 반드시 해당 도구를 사용하세요:
 1. search_conversation: 이전 대화 내용 필요시
 2. search_web: 최신 정보나 외부 정보 필요시
-3. multiply: 숫자 곱셈 필요시
+3. general_chat: 일반적인 대화나 질문일 때
 
 사용 가능한 도구:
 {tools}
@@ -273,9 +232,16 @@ Final Answer: 이전 대화에서 삼성 주식은 ...
 ])
 
 
+# 단기 대화 내용
+conversation_id = "test_session"
+
+memory = InMemoryChatMessageHistory(session_id = conversation_id)
 
 
 # AgentExecutor 설정
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
 agent = create_react_agent(llm, tools, prompt)
 
 agent_executor = AgentExecutor(
@@ -295,9 +261,6 @@ agent_with_history = RunnableWithMessageHistory(
 
 config = {"configurable" : {"session_id" : conversation_id}}
 
-
-
-
 while True:
     question = input("질문을 입력해주세요 : ")
     result = agent_with_history.invoke({
@@ -315,8 +278,3 @@ while True:
         print(save_result)
 
         break
-
-
-
-
-
