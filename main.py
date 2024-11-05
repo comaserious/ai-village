@@ -8,7 +8,9 @@ from dotenv import load_dotenv
 
 from agent_dialogue import *
 
-from talk_eachother import *
+
+# 대화 시뮬레이션
+from persona_chat_each_other_v1 import *
 
 load_dotenv()
 
@@ -23,6 +25,46 @@ sadness_persona = Persona("Sadness" , user)
 personas = [joy_persona, anger_persona, sadness_persona]
 
 # make_persona_association(personas, user)
+
+
+# 대화 시뮬레이션
+# 사용 예시
+def main():
+    # OpenAI API 키 설정 필요
+    # import os
+    # os.environ["OPENAI_API_KEY"] = "your-api-key"
+    
+    # 에이전트 생성
+    customer = ConversationAgent(
+        name="고객",
+        role="식당 손님",
+        personality="음식에 대해 까다로운 성격이지만, 예의 바르게 의견을 표현합니다."
+    )
+    
+    server = ConversationAgent(
+        name="직원",
+        role="레스토랑 직원",
+        personality="""친절하고 전문적이며, 고객 만족을 최우선으로 생각합니다.
+        메뉴에 대해 상세히 설명할 수 있으며, 고객의 모든 질문에 친절하게 답변합니다.
+        고객이 식사를 마치고 계산하기 전까지는 계속해서 서비스를 제공합니다."""
+    )
+    
+    # 시뮬레이션 설정
+    simulation = ConversationSimulation()
+    simulation.add_agent(customer)
+    simulation.add_agent(server)
+    
+    # 대화 시작
+    initial_message = "안녕하세요, 오늘 스테이크 메뉴 추천해주실 수 있나요?"
+    simulation.simulate_conversation(
+        initial_speaker="고객",
+        initial_message=initial_message
+    )
+
+if __name__ == "__main__":
+    main()
+
+
 
 
 
