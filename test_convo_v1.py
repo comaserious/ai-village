@@ -54,11 +54,6 @@ if docs:
     print("첫 번째 문서 내용:", docs[0].page_content)
 
 
-
-
-
-
-
 # 문서 분할 설정
 parent_splitter = RecursiveCharacterTextSplitter(chunk_size=200, chunk_overlap=100)
 child_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=10)
