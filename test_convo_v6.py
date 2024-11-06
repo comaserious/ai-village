@@ -25,7 +25,6 @@ from pathlib import Path
 import pickle
 import hashlib
 
-from persona import Persona
 PERSIST_DIRECTORY = "./chroma_db"
 STORE_DIRECTORY = "./doc_store"  # parent documents를 저장할 디렉토리
 
@@ -131,7 +130,7 @@ vectorstore = Chroma(
 )
 
 # Tool 함수들
-def search_web(query: str , persona : Persona) -> str:
+def search_web(query: str) -> str:
     """Search the web for information about a given query"""
     search = TavilySearchResults(
         max_results=3,
@@ -144,7 +143,7 @@ def search_web(query: str , persona : Persona) -> str:
     print(result)
     return result
 
-def search_conversation(query: str, user_id: str, persona_name: str , persona : Persona) -> str:
+def search_conversation(query: str, user_id: str, persona_name: str) -> str:
     """이전 대화 내용에서 해당 사용자와 페르소나의 관련 정보를 검색합니다."""
     print("=================================대화 검색=============================================")
     print("검색 쿼리:", query)
@@ -203,7 +202,7 @@ def search_conversation(query: str, user_id: str, persona_name: str , persona : 
         print(f"검색 중 오류 발생: {e}")
         return "이전 대화 내용이 없거나 검색 중 오류가 발생했습니다."
 
-def general_chat(query: str , persona : Persona) -> str:
+def general_chat(query: str) -> str:
     """일반적인 대화를 처리합니다."""
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
     prompt = f"""당신은 친근하고 도움이 되는 AI 어시스턴트입니다.
@@ -211,18 +210,18 @@ def general_chat(query: str , persona : Persona) -> str:
     return llm.invoke(prompt).content
 
 # Tools 정의
-def create_tools(user_id, persona_name, persona : Persona):
+def create_tools(user_id, persona_name):
     """사용자와 페르소나별 도구 생성"""
     return [
         Tool(name="search_web", 
              description="Search the web for information about a given query", 
-             func=search_web(persona)),
+             func=search_web),
         Tool(name="search_conversation", 
              description="Search the conversation history for information about a given query",
-             func=lambda query: search_conversation(query, user_id, persona_name, persona)),
+             func=lambda query: search_conversation(query, user_id, persona_name)),
         Tool(name="general_chat", 
              description="General conversation", 
-             func=general_chat(persona)),
+             func=general_chat),
     ]
 
 # Prompt 템플릿
@@ -273,14 +272,11 @@ Final Answer: (관찰 결과에 따른 응답)
     ("assistant", "{agent_scratchpad}")
 ])
 
-def run_conversation(user_id ,persona : Persona):
+def run_conversation(user_id, persona_name):
     """특정 사용자와 페르소나의 대화 세션 실행"""
-
-    persona_name = persona.name
-
     conversation_id = f"{user_id}_{persona_name}_session"
     memory = InMemoryChatMessageHistory(session_id=conversation_id)
-    tools = create_tools(user_id, persona_name, persona)
+    tools = create_tools(user_id, persona_name)
     
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
     agent = create_react_agent(llm, tools, prompt)
@@ -319,4 +315,4 @@ def run_conversation(user_id ,persona : Persona):
 if __name__ == "__main__":
     user_id = input("사용자 ID를 입력하세요: ")
     persona_name = input("페르소나 이름을 입력하세요: ")
-    run_conversation(user_id , persona)
+    run_conversation(user_id, persona_name)

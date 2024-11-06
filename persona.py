@@ -101,7 +101,8 @@ class Persona:
         return relationship
 
 
-
+    def get_daily_req(self):
+        return self.scratch.get_daily_req()
 
 
         

@@ -9,14 +9,19 @@ class Scratch:
         self.curr_tile = None;
         self.daily_req = [];
         self.f_daily_req = [];
-        self.f_daily_schedule_hourly_org= [];
+         
     
         self.lifestyle = None;
         self.name = None;
+        self.wake_up_time = None;
     
-        
+        # daily_req_hourly 데이터가 있으면 f_daily_schedule_hourly_org에 할당
+        if 'daily_req_hourly' in scratched_saved:
+            self.f_daily_schedule_hourly_org = scratched_saved['daily_req_hourly']
+        else:
+            self.f_daily_schedule_hourly_org = []
     
-
+    
     
     
     def get_str_iss(self):
@@ -46,3 +51,8 @@ class Scratch:
     def get_str_name(self):
         return self.s_mem_data['name'] 
     
+    def get_daily_req(self):
+        return self.f_daily_schedule_hourly_org
+
+    def get_wake_up_time(self):
+        return self.wake_up_time

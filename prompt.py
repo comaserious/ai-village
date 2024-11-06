@@ -2,15 +2,15 @@ def create_location_prompt(persona, activity, duration, current_position, spatia
 
     
 
-    activity_zone_mapping = {
-    "명상": ["Joy_home", "Park"],
-    "식사": ["Cafe"],
-    "자원봉사 활동": ["Discussion Room", "Library"],
-    "사회적 활동": ["Discussion Room", "Park", "shopping_center"],
-    "독서": ["Library", "Joy_home"],
-    "창작 활동": ["Joy_home", "Discussion Room"],
-    "휴식": ["Joy_home", "Park", "Cafe"]
-}
+#     activity_zone_mapping = {
+#     "명상": ["Joy_home", "Park"],
+#     "식사": ["Cafe"],
+#     "자원봉사 활동": ["Discussion Room", "Library"],
+#     "사회적 활동": ["Discussion Room", "Park", "shopping_center"],
+#     "독서": ["Library", "Joy_home"],
+#     "창작 활동": ["Joy_home", "Discussion Room"],
+#     "휴식": ["Joy_home", "Park", "Cafe"]
+# }
     prompt = f"""
         {persona.scratch.get_str_iss()}
 

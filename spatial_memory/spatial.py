@@ -512,59 +512,59 @@ class SpatialMemory:
         
         return directions
 
-# 사용 예시
-def main():
-    spatial_memory = SpatialMemory(map_matrix, zone_labels)
+# # 사용 예시
+# def main():
+#     spatial_memory = SpatialMemory(map_matrix, zone_labels)
 
-    filepath = '../memory_storage/DwgZh7Ud7STbVBnkyvK5kmxUIzw1/Joy/spatial.json'
+#     filepath = '../memory_storage/DwgZh7Ud7STbVBnkyvK5kmxUIzw1/Joy/spatial.json'
 
-    spatial_memory.export_spatial_memory(filepath)
+#     spatial_memory.export_spatial_memory(filepath)
 
-    # # Joy_home에서 Library까지의 경로 찾기
-    # start_zone = 2  # Joy_home
-    # end_zone = 11   # Library
+#     # # Joy_home에서 Library까지의 경로 찾기
+#     # start_zone = 2  # Joy_home
+#     # end_zone = 11   # Library
     
-    # path_result = spatial_memory.get_path_between_zones(start_zone, end_zone)
+#     # path_result = spatial_memory.get_path_between_zones(start_zone, end_zone)
     
-    # if path_result:
-    #     path, cost = path_result
-    #     print(f"\nFound path from {spatial_memory.zone_labels[start_zone]} to {spatial_memory.zone_labels[end_zone]}")
-    #     print(f"Path cost: {cost}")
+#     # if path_result:
+#     #     path, cost = path_result
+#     #     print(f"\nFound path from {spatial_memory.zone_labels[start_zone]} to {spatial_memory.zone_labels[end_zone]}")
+#     #     print(f"Path cost: {cost}")
         
-    #     # 경로 설명 출력
-    #     print("\nRoute description:")
-    #     for step in spatial_memory.get_route_description(path):
-    #         print(f"- {step}")
+#     #     # 경로 설명 출력
+#     #     print("\nRoute description:")
+#     #     for step in spatial_memory.get_route_description(path):
+#     #         print(f"- {step}")
         
-    #     # 경로 시각화
-    #     spatial_memory.visualize_path(path, {start_zone, end_zone, 8})
-    # else:
-    #     print("No path found!")
+#     #     # 경로 시각화
+#     #     spatial_memory.visualize_path(path, {start_zone, end_zone, 8})
+#     # else:
+#     #     print("No path found!")
 
 
-    # 현재 위치 (예: 복도의 한 지점)
-    # current_pos = Position(5, 5)
-    start_zone = 2  # Joy_home
-    target_zone = 11  # Library
+#     # 현재 위치 (예: 복도의 한 지점)
+#     # current_pos = Position(5, 5)
+#     start_zone = 2  # Joy_home
+#     target_zone = 11  # Library
     
-    # path_result = spatial_memory.get_path_from_position(current_pos, target_zone)
+#     # path_result = spatial_memory.get_path_from_position(current_pos, target_zone)
 
-    path_result = spatial_memory.get_path_between_zones(start_zone, target_zone)
+#     path_result = spatial_memory.get_path_between_zones(start_zone, target_zone)
     
-    if path_result:
-        path, cost = path_result
-        print(f"\nFound path to {spatial_memory.zone_labels[target_zone]}")
-        print(f"Path cost: {cost}")
+#     if path_result:
+#         path, cost = path_result
+#         print(f"\nFound path to {spatial_memory.zone_labels[target_zone]}")
+#         print(f"Path cost: {cost}")
         
-        # 경로 설명 출력
-        print("\nRoute description:")
-        for step in spatial_memory.get_path_description_from_position(path):
-            print(f"- {step}")
+#         # 경로 설명 출력
+#         print("\nRoute description:")
+#         for step in spatial_memory.get_path_description_from_position(path):
+#             print(f"- {step}")
         
-        # 경로 시각화
-        spatial_memory.visualize_path(path, {target_zone, 8})
-    else:
-        print("No path found!")
+#         # 경로 시각화
+#         spatial_memory.visualize_path(path, {target_zone, 8})
+#     else:
+#         print("No path found!")
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

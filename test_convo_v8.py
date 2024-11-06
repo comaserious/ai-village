@@ -341,9 +341,9 @@ Use these tools in following situations:
 2. search_web: When needing current or external information
 3. general_chat: For general conversation
 
-Available tools: {{tools}}
+Available tools: {tools}
 
-Tool names: {{tool_names}}"""
+Tool names: {tool_names}"""
 
     # partial을 사용하여 tools와 tool_names 변수 바인딩
     return ChatPromptTemplate.from_messages([
@@ -356,7 +356,7 @@ Tool names: {{tool_names}}"""
         tool_names=tool_names
     )
 
-def run_conversation(user_id: str, persona: Persona):
+def run_conversation(user_id: str, persona: Persona , message : str):
     """특정 사용자와 페르소나의 대화 세션 실행"""
 
     
@@ -388,16 +388,33 @@ def run_conversation(user_id: str, persona: Persona):
 
     config = {"configurable": {"session_id": conversation_id}}
 
-    while True:
-        question = input("질문을 입력해주세요 : ")
-        result = agent_with_history.invoke({
-            "input": question
-        }, config=config)
+    # while True:
+    #     question = input("질문을 입력해주세요 : ")
+    #     result = agent_with_history.invoke({
+    #         "input": question
+    #     }, config=config)
 
-        print("==========================대답==============================")
-        print(result['output'])
+    #     print("==========================대답==============================")
+    #     print(result['output'])
 
-        if question.lower() == "exit":
-            save_result = save_conversation_to_chroma(memory, conversation_id, user_id, persona_name)
-            print(save_result)
-            break
+    #     if question.lower() == "exit":
+    #         save_result = save_conversation_to_chroma(memory, conversation_id, user_id, persona_name)
+    #         print(save_result)
+    #         break
+
+    result = agent_with_history.invoke({
+        "input": message
+    }, config=config)
+
+    print('result : ', result['output'])
+
+    if message.lower() == "exit":
+        save_result = save_conversation_to_chroma(memory, conversation_id, user_id, persona_name)
+        print(save_result)
+
+    return result['output']
+
+# if __name__ == "__main__":
+#     user_id = input("사용자 ID를 입력하세요: ")
+#     persona_name = input("페르소나 이름을 입력하세요: ")
+#     run_conversation(user_id , persona)

@@ -13,7 +13,7 @@ from agent_dialogue import *
 from persona_chat_each_other_v1 import *
 
 # 페르소나와의 대화
-from test_convo_v7 import *
+from test_convo_v8 import *
 
 load_dotenv()
 
@@ -27,4 +27,4 @@ sadness_persona = Persona("Sadness" , user)
 
 personas = [joy_persona, anger_persona, sadness_persona]
 
-run_conversation(user['uid'], anger_persona)
+run_conversation(user['uid'], joy_persona)

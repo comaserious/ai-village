@@ -86,11 +86,16 @@ def new_day_plan( persona , user ):
 
     response = wake_up_time(persona , today)
 
+    persona.scratch.wake_up_time = response
+
     filepath = f"memory_storage/{user['uid']}/{persona.name}/scratch.json"
 
     persona_scratch = load_persona_data(filepath)
 
-    
+    persona_scratch["wake_up_time"] = response
+
+    with open(filepath, 'w', encoding='utf-8') as file:
+        json.dump(persona_scratch, file, ensure_ascii=False, indent=4)
 
     prompt = f"""
 
@@ -254,7 +259,7 @@ def plan_daily_route(daily_activity, spatial_data,persona):
 
 # ==========================================================================================
 
-def create_full_schedule(route_plan, spatial_data,persona):
+def create_full_schedule(route_plan, spatial_data, persona):
     """
     일정과 이동 경로를 포함한 전체 스케줄을 생성합니다.
     """
