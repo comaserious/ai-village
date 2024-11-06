@@ -25,7 +25,7 @@ class Scratch:
         common_state += f"Age : {self.s_mem_data['age']} \n"
         common_state += f"Personality : {self.s_mem_data['personality']} \n"
         common_state += f"Speech : {self.s_mem_data['speech']} \n"
-        common_state += f"Life Style : {self.s_mem_data['lifestyle']} \n"
+        common_state += f"Life Style : {self.s_mem_data['lifestyle']['weekday']} and {self.s_mem_data['lifestyle']['weekend']} \n"
         common_state += f"Gender : {self.s_mem_data['gender']} \n"
         common_state += f"Character : {self.s_mem_data['character']} \n"
 
