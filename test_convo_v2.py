@@ -68,7 +68,12 @@ print("로드된 문서 수:", len(docs))
 if docs:
     print("첫 번째 문서 내용:", docs[0].page_content)
 
-retriever.add_documents(docs)
+# docs가 비어있지 않은 경우에만 추가하도록 수정
+if docs:
+    print(f"Adding {len(docs)} documents to retriever")
+    retriever.add_documents(docs)
+else:
+    print("No documents to add to retriever")
 
 #Tool
 # 웹 검색
@@ -92,27 +97,20 @@ def search_web(query : str) -> str:
 def search_conversation(query: str) -> str:
     """이전 대화 내용에서 관련 정보를 검색합니다."""
     print("=================================대화 검색=============================================")
-    
-    print("검색 쿼리", query)
+    print("검색 쿼리:", query)
     
     try:
-        # MMR 검색 사용
-        results = vectorstore.max_marginal_relevance_search(
-            query,
-            k=5,  # 검색할 총 문서 수
-            fetch_k=20,  # 후보 문서 수
-            lambda_mult=0.5  # 다양성 vs 관련성 균형 조절
-        )
-        
-        # retriever 결과 확인 및 예외 처리 추가
-        retriever_results = retriever.invoke(query)
-        context_result = retriever_results
-
-        print("문맥 정보", context_result)
-        print("=================================대화 검색 결과=============================================")
+        # 직접 vectorstore에서 검색
+        results = vectorstore.similarity_search(query, k=5)
         
         if not results:
             return "관련된 대화 내용을 찾을 수 없습니다."
+        
+        # 검색 결과를 문자열로 변환
+        context_result = "\n".join([doc.page_content for doc in results])
+        
+        print("문맥 정보:", context_result)
+        print("=================================대화 검색 결과=============================================")
         
         prompt = f"""다음은 이전 대화의 관련 내용입니다:
 
@@ -122,7 +120,7 @@ def search_conversation(query: str) -> str:
 """
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
         
-        return llm.invoke(prompt)
+        return llm.invoke(prompt).content
     except Exception as e:
         print(f"검색 중 오류 발생: {e}")
         return "이전 대화 내용이 없거나 검색 중 오류가 발생했습니다."
@@ -163,7 +161,6 @@ tools = [
 
 # 채팅 내용 txt 저장
 def save_conversation_to_chroma(memory, conversation_id):
-    # 저장 경로 설정
     base_path = Path("memory_storage/DwgZh7Ud7STbVBnkyvK5kmxUIzw1/Joy")
     base_path.mkdir(parents=True, exist_ok=True)
     text_path = base_path / "conversation.txt"
@@ -177,13 +174,23 @@ def save_conversation_to_chroma(memory, conversation_id):
             conversation_text.append(f"시간: {timestamp}")
             conversation_text.append(f"발화자: {msg_type}")
             conversation_text.append(f"내용: {msg.content}")
-            conversation_text.append("-" * 50)  # 구분선
+            conversation_text.append("-" * 50)
         
-        # 텍스트 파일로 저장 (기존 내용에 추가)
+        formatted_text = "\n".join(conversation_text)
+        
+        # 텍스트 파일로 저장
         with open(text_path, 'a', encoding='utf-8') as f:
             f.write(f"\n세션 ID: {conversation_id}\n")
-            f.write("\n".join(conversation_text))
-            f.write("\n\n")  # 세션 간 구분을 위한 빈 줄
+            f.write(formatted_text)
+            f.write("\n\n")
+        
+        # 대화 내용이 있는 경우에만 Chroma DB에 추가
+        if formatted_text.strip():
+            new_doc = Document(
+                page_content=formatted_text,
+                metadata={"session_id": conversation_id}
+            )
+            vectorstore.add_documents([new_doc])
             
         return "대화 내용이 성공적으로 저장되었습니다."
     except Exception as e:

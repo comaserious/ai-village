@@ -10,8 +10,6 @@ joy_persona = Persona("Joy" , user)
 anger_persona = Persona("Anger" , user)
 sadness_persona = Persona("Sadness" , user)
 
-print(joy_persona.scratch.get_str_iss())
-
 
 personas = [joy_persona, anger_persona, sadness_persona]
 
@@ -23,8 +21,7 @@ simulation = ConversationSimulation()
 simulation.add_agent(joy_agent)
 simulation.add_agent(anger_agent)
 
-# 대화 시작
-
+# 시뮬레이션 시작
 simulation.simulate_conversation()
 
 
