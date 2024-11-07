@@ -5,7 +5,7 @@ from firebase_admin import firestore
 import firebase_admin
 from firebase_admin import credentials
 import json
-from test_convo_v8 import *
+from test_convo_v9 import *
 
 from global_method import *
 from run_gpt import *
@@ -145,7 +145,7 @@ async def start(request: Request):
             'schedule': daily_activity_str,  # JSON 문자열로 저장
             'uid' : uid
         }
-        
+
         doc_id = f"{uid}_{today.strftime('%Y%m%d')}"
         db.collection('village').document('schedule').collection('schedules').document(doc_id).set(schedule_data)
         print(f"Successfully saved schedule for user {uid} to Firestore")
@@ -180,7 +180,9 @@ async def chat_user(request : Request):
     print("유저와의 채팅")
     param = await request.json()
 
-    data = json.loads(param['param'])
+    data = param['param']
+
+    # data = json.loads(param['param'])
 
     uid = data['uid']
     persona_name = data['persona']
@@ -188,9 +190,33 @@ async def chat_user(request : Request):
 
     response = run_conversation(uid , persona , message = data['message'])
 
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.2)
+
+    prompt = f"""
+    당신은 {persona.name}입니다. 다음 특성을 가지고 있습니다:
+
+    성격: {persona.scratch.get_str_personality()}
+    말투: {persona.scratch.get_str_speech()}
+    캐릭터 특징: {persona.scratch.get_str_character()}
+
+    주어진 응답 내용: {response}
+
+    위 응답을 당신의 성격과 말투를 살려서 다시 작성해주세요.
+
+    규칙:
+    1. {persona.name}의 특징적인 말투와 어투를 반드시 사용하세요
+    2. {persona.name}의 감정과 성격이 드러나도록 표현하세요
+    3. 기본 내용은 유지하되, 캐릭터의 관점에서 재해석하세요
+
+    응답 형식:
+    {persona.name}의 관점에서 작성된 답변을 제시해주세요.
+    한국어로 대답하세요.
+    """
+
+    result = llm.invoke(prompt)
 
 
-    return {"message" : response}
+    return {"message" : result.content}
 
 
 
