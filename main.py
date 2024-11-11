@@ -13,6 +13,10 @@ from run_gpt import *
 from spatial_memory.spatial import *
 from spatial_memory.maze import *
 
+from persona import *
+from persona_chat_each_other_v2 import *
+
+
 load_dotenv()
 
 cred = credentials.Certificate("mirrorgram-20713-firebase-adminsdk-u9pdx-c3e12134b4.json")
@@ -27,68 +31,6 @@ db = firestore.client()
 @app.post("/")
 def read_root():
     return {"message": "Hello, World!"}
-
-
-# @app.post("/start")
-# async def start(request: Request):
-#     print("게임 시작")
-#     data = await request.json()
-    
-#     uid = data['uid']
-#     daily_activity = []
-
-#     personas = [
-#         Persona("Joy", data),
-#         Persona("Anger", data),
-#         Persona("Sadness", data)
-#     ]
-
-#     for persona in personas:
-#         activities = []
-        
-#         persona.plan(persona.name, True, data)
-#         daily_plan_hourly(persona, data)
-        
-#         json_file = json.load(open(f"memory_storage/{uid}/{persona.name}/scratch.json"))
-#         daily_schedule_hourly = json_file["daily_req_hourly"]
-        
-#         for activity, duration in daily_schedule_hourly:
-#             activities.append({
-#                 "activity": activity,
-#                 "duration": duration
-#             })
-        
-#         spatial_memory = SpatialMemory(map_matrix, zone_labels)
-#         filepath = f"memory_storage/{uid}/{persona.name}/spatial.json"
-#         spatial_memory.export_spatial_memory(filepath)
-        
-#         spatial_data = json.load(open(filepath))
-#         route_plan = plan_daily_route(activities, spatial_data, persona)
-#         complete_schedule = create_full_schedule(route_plan, spatial_data, persona)
-        
-#         daily_activity.append({
-#             "name": persona.name,
-#             "wake_up_time": persona.scratch.wake_up_time,
-#             "daily_schedule": complete_schedule
-#         })
-
-#     # village/schedule/{uid} 경로에 저장
-#     try:
-#         # village/schedule 컬렉션에 문서 추가
-#         schedule_ref = db.collection('village').document('schedule')
-#         schedule_ref.set({
-#             uid: {
-#                 'timestamp': datetime.now(),
-#                 'schedule': daily_activity
-#             }
-#         }, merge=True)  # merge=True로 설정하여 기존 문서를 덮어쓰지 않고 업데이트
-        
-#         print(f"Successfully saved schedule for user {uid} to Firestore")
-#     except Exception as e:
-#         print(f"Error saving to Firestore: {str(e)}")
-#         # 에러 발생시에도 클라이언트에게는 스케줄 데이터 반환
-
-#     return {"schedule": daily_activity}
 
 @app.post("/start")
 async def start(request: Request):
@@ -169,7 +111,67 @@ def move():
 
 
 @app.post("/chat/persona")
-def chat_persona():
+async def chat_persona(request : Request):
+    print("페르소나간 대화")
+    
+    print(1)
+    param = await request.json()
+    print(2)
+    data = json.loads(param['param']) if isinstance(param['param'], str) else param['param']
+    print("받은 데이터:", data)  # 디버깅을 위한 출력
+    print(3)
+    characters = data['characters']
+    print(4)
+    personas = []
+    print(5)
+    
+    # SpatialMemory 인스턴스 생성
+    spatial_memory = SpatialMemory(map_matrix, zone_labels)
+    print(6)
+    for character in characters:
+        persona = Persona(character['name'], data)
+        
+        # position 좌표를 이용해 현재 위치의 zone 정보 가져오기
+        x = character['position']['x']
+        y = character['position']['y']
+        current_zone = spatial_memory.get_zone_at_position(x, y)
+        
+        # persona에 위치 정보 저장
+        persona.current_location = {
+            'coordinates': character['position'],
+            'zone': current_zone
+        }
+        
+        personas.append(persona)
+
+
+    print(7)
+    print(len(personas), '페르소나 숫자')
+
+    sim_agents = []
+
+    sim_agents.append(ConversationAgent(personas[0], personas[1], data['uid']))
+    sim_agents.append(ConversationAgent(personas[1], personas[0], data['uid']))
+
+    print(8)
+    print(len(sim_agents), '시뮬레이션 에이전트 숫자')
+
+
+
+    simulation = ConversationSimulation(uid = data['uid'], db = db)
+ 
+    print(9)
+    for sim_agent in sim_agents:
+        simulation.add_agent(sim_agent)
+
+    print(10)
+    simulation.simulate_conversation()
+
+    print(11)
+
+    
+
+
     return {"message" : "페르소나 채팅 값"}
 
 
@@ -180,9 +182,9 @@ async def chat_user(request : Request):
     print("유저와의 채팅")
     param = await request.json()
 
-    data = param['param']
+    # data = param['param']
 
-    # data = json.loads(param['param'])
+    data = json.loads(param['param'])
 
     uid = data['uid']
     persona_name = data['persona']

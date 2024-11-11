@@ -26,6 +26,8 @@ class Persona:
 
         self.relationships = self._load_my_relationships(user['uid'])
 
+        
+
     def plan(self, name, new_day , user):
         return plan(self ,new_day , user)
     

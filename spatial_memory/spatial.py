@@ -512,6 +512,13 @@ class SpatialMemory:
         
         return directions
 
+    def get_zone_at_position(self, x: int, y: int) -> str:
+        """주어진 x, y 좌표에 해당하는 zone을 반환합니다."""
+        if 0 <= x < len(self.map_matrix[0]) and 0 <= y < len(self.map_matrix):
+            zone_index = self.map_matrix[y][x]
+            return self.zone_labels[zone_index]
+        return "unknown"  # 좌표가 맵 범위를 벗어난 경우
+
 # # 사용 예시
 # def main():
 #     spatial_memory = SpatialMemory(map_matrix, zone_labels)

@@ -4,19 +4,30 @@ from langchain_openai import ChatOpenAI
 from typing import List, Dict
 import time
 import random
+from datetime import datetime
 
 from persona import Persona
 
+from firebase_admin import firestore
+import firebase_admin
+from firebase_admin import credentials
+
+
+
+
+
 class ConversationAgent:
-    def __init__(self, persona1: Persona, persona2: Persona, model: str = "gpt-4"):
+    def __init__(self, persona1: Persona, persona2: Persona, uid: str, model: str = "gpt-4o-mini"):
         self.persona = persona1
         self.name = persona1.name
+        self.uid = uid
         
         # persona의 기본 특성 가져오기
         self.iss = persona1.scratch.get_str_iss()
         self.personality = persona1.scratch.get_str_personality()
         self.speech = persona1.scratch.get_str_speech()
         self.lifestyle = persona1.scratch.get_str_lifestyle()
+        self.current_location = persona1.current_location
         
         # persona2와의 관계 정보 가져오기
         self.relationship_info = persona1.get_relationship_info(persona2.name)
@@ -36,6 +47,7 @@ class ConversationAgent:
 - 성격: {self.personality}
 - 말투: {self.speech}
 - 생활 방식: {self.lifestyle}
+- 현재 위치: {self.current_location['zone']}
 
 {persona2.name}와의 관계:
 - 관계 유형: {self.relationship_type}
@@ -51,6 +63,7 @@ class ConversationAgent:
 4. 잠재적 갈등 요소를 인지하고 적절히 대응하세요
 5. 자연스럽고 감정이 담긴 대화를 해주세요
 6. 응답할 때 자신의 역할명({persona1.name}:)을 앞에 붙이지 마세요
+7. 현재 위치는 {self.current_location['zone']}입니다. 이 정보를 반영하여 대화하세요
 
 
 대화 시 주의사항:
@@ -101,29 +114,79 @@ class ConversationAgent:
         return response.content
 
 class ConversationSimulation:
-    def __init__(self):
+    def __init__(self, uid: str, db: firestore.Client):
         self.agents: Dict[str, ConversationAgent] = {}
-    
+        self.db = db
+        self.uid = uid
+        
+    def save_conversation(self, conversation_id: str, message: str, speaker: str, timestamp: datetime = None):
+        if timestamp is None:
+            timestamp = datetime.now()
+            
+        path = f"village/convo/{self.uid}"
+        conversation_ref = self.db.collection(path).document(conversation_id)
+        conversation_ref.collection('messages').add({
+            'speaker': speaker,
+            'content': message,
+            'timestamp': timestamp,
+            'location': self.agents[speaker].current_location
+        })
+
     def add_agent(self, agent: ConversationAgent):
         self.agents[agent.name] = agent
     
+    def get_previous_conversation(self, speaker: str, listener: str) -> str:
+        """이전 대화 내용을 가져오는 함수"""
+        participants = sorted([speaker, listener])
+        conversation_id = f"{'-'.join(participants)}"
+        
+        path = f"village/convo/{self.uid}"
+        
+        # 최근 대화 내용 가져오기
+        messages = (self.db.collection(path)
+                   .document(conversation_id)
+                   .collection('messages')
+                   .order_by('timestamp', direction=firestore.Query.DESCENDING)
+                   .limit(5)  # 최근 5개 메시지만
+                   .stream())
+        
+        previous_messages = []
+        for msg in messages:
+            msg_data = msg.to_dict()
+            previous_messages.append(f"{msg_data['speaker']}: {msg_data['content']}")
+        
+        return "\n".join(reversed(previous_messages)) if previous_messages else "이전 대화 없음"
+
     def generate_initial_message(self, speaker_agent: ConversationAgent) -> str:
         """선택된 페르소나의 성격에 맞는 대화 시작 메시지를 생성"""
-        llm = ChatOpenAI(model="gpt-4", temperature=0.7)
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
+        
+        # 대화 상대 찾기
+        listener_name = next(name for name in self.agents.keys() if name != speaker_agent.name)
+        
+        # 이전 대화 내용 가져오기
+        previous_conversation = self.get_previous_conversation(speaker_agent.name, listener_name)
         
         prompt = f"""당신은 {speaker_agent.name}입니다.
+
+당신의 현재 위치는 {speaker_agent.current_location['zone']}입니다.
 
 당신의 특성:
 {speaker_agent.iss}
 말투: {speaker_agent.speech}
 
-상황: 당신은 지금 {list(self.agents.keys())[0] if list(self.agents.keys())[0] != speaker_agent.name else list(self.agents.keys())[1]}를 만났습니다.
+{listener_name}와의 이전 대화 내용:
+{previous_conversation}
+
+상황: 당신은 지금 {listener_name}를 만났습니다.
 당신의 성격과 말투를 반영하여, 자연스러운 대화 시작 문장을 만들어주세요.
 
 규칙:
 1. 당신의 성격에 맞게 대화를 시작하세요
-2. 간단한 인사나 안부를 물어보는 정도로 시작하세요
-3. 너무 길지 않게 해주세요
+2. 이전 대화 내용이 있다면, 그 맥락을 고려하여 자연스럽게 이어가세요
+3. 간단한 인사나 안부를 물어보는 정도로 시작하세요
+4. 너무 길지 않게 해주세요
+5. 현재 위치({speaker_agent.current_location['zone']})를 고려하여 대화하세요
 
 응답 형식: 대화 시작 문장만 작성해주세요."""
 
@@ -153,41 +216,61 @@ class ConversationSimulation:
         return random.choices(agents_list, weights=weights, k=1)[0]
 
     def simulate_conversation(self, turns: int = 10):
-        """대화 시뮬레이션 시작"""
+        # 참여자 이름만으로 conversation_id 생성
+        participants = sorted([agent.name for agent in self.agents.values()])
+        conversation_id = f"{'-'.join(participants)}"
+        
+        path = f"village/convo/{self.uid}"
+        
+        # 대화 시작 시간을 별도 필드로 저장
+        conversation_ref = self.db.collection(path).document(conversation_id)
+        conversation_ref.set({
+            'participants': participants,
+            'conversations': firestore.ArrayUnion([{
+                'start_time': datetime.now(),
+                'messages': []  # 이 대화의 메시지들이 저장될 배열
+            }])
+        }, merge=True)
+        
         # 초기 화자 선택
         initial_speaker = self.select_initial_speaker()
-        
-        # 초기 메시지 생성
         initial_message = self.generate_initial_message(initial_speaker)
         
         print(f"\n=== 대화 시작 ===")
         print(f"{initial_speaker.name}: {initial_message}")
+        
+        # 초기 메시지 저장
+        self.save_conversation(
+            conversation_id=conversation_id,
+            message=initial_message,
+            speaker=initial_speaker.name
+        )
         
         current_speaker = initial_speaker.name
         current_message = initial_message
         turn_count = 0
         
         while turn_count < turns:
-            # 다음 화자 결정
             speakers = list(self.agents.keys())
             current_idx = speakers.index(current_speaker)
             next_speaker = speakers[(current_idx + 1) % len(speakers)]
             
-            # 다음 화자의 응답 생성
             response = self.agents[next_speaker].receive_message(current_message, current_speaker)
             
-            # 자연스러운 대화 흐름을 위한 짧은 대기
             time.sleep(0.5)
-            
-            # 응답 출력
             print(f"{next_speaker}: {response}")
             
-            # END 태그가 있는 경우 대화 종료
+            # 응답 저장
+            self.save_conversation(
+                conversation_id=conversation_id,
+                message=response,
+                speaker=next_speaker
+            )
+            
             if "<END>" in response:
                 print("\n=== 대화가 자연스럽게 종료되었습니다 ===")
                 break
             
-            # 대화 계속 진행
             current_speaker = next_speaker
             current_message = response
             turn_count += 1
