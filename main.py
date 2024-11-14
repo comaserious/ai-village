@@ -45,7 +45,9 @@ async def start(request: Request):
     personas = [
         Persona("Joy", data),
         Persona("Anger", data),
-        Persona("Sadness", data)
+        Persona("Sadness", data),
+        Persona("Clone", data),
+        Persona("Custom", data)
     ]
 
     for persona in personas:
@@ -99,14 +101,20 @@ async def start(request: Request):
 
 
 @app.post("/end")
-def end():
+async def end(request: Request):
+    print("게임 종료")
+
+    param = await request.json()
+
+    data = json.loads(param['param'])
+
+
+
     return {"message" : "게임 종료"}
 
 
 
-@app.post("/move")
-def move():
-    return {"message" : "움직임 값"}
+
 
 
 
@@ -201,7 +209,9 @@ async def chat_user(request : Request):
     말투: {persona.scratch.get_str_speech()}
     캐릭터 특징: {persona.scratch.get_str_character()}
 
-    주어진 응답 내용: {response}
+    질문 : {data['message']}
+
+    질문에 대한 당신의 응답은 다음과 같습니다: {response}
 
     위 응답을 당신의 성격과 말투를 살려서 다시 작성해주세요.
 

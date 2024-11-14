@@ -64,6 +64,8 @@ class ConversationAgent:
 5. 자연스럽고 감정이 담긴 대화를 해주세요
 6. 응답할 때 자신의 역할명({persona1.name}:)을 앞에 붙이지 마세요
 7. 현재 위치는 {self.current_location['zone']}입니다. 이 정보를 반영하여 대화하세요
+8. {persona1.name}의 말투와 personality 를 반영해서 대화하세요.
+9. 50 자에서 100자 정도로 작성해주세요
 
 
 대화 시 주의사항:
@@ -185,8 +187,9 @@ class ConversationSimulation:
 1. 당신의 성격에 맞게 대화를 시작하세요
 2. 이전 대화 내용이 있다면, 그 맥락을 고려하여 자연스럽게 이어가세요
 3. 간단한 인사나 안부를 물어보는 정도로 시작하세요
-4. 너무 길지 않게 해주세요
+4. 50 자에서 100자 정도로 작성해주세요
 5. 현재 위치({speaker_agent.current_location['zone']})를 고려하여 대화하세요
+6. {speaker_agent.name}의 말투와 personality 를 반영해서 대화하세요.
 
 응답 형식: 대화 시작 문장만 작성해주세요."""
 

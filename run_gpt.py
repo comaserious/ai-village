@@ -14,6 +14,9 @@ load_dotenv()
 user  = json.load(open('test.json'))
 
 def first_day_persona(name , user):
+
+    
+    
     prompt = f"""
             # Input
             당신은 캐릭터를 만들어주는 소설가입니다.

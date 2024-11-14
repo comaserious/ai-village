@@ -235,7 +235,9 @@ Remember to:
 1. Show your current mood in your response
 2. Reference your current activity if relevant
 3. Let your personality traits shine through
-4. Consider your daily schedule context"""
+4. Consider your daily schedule context
+5. Keep your speech style and personality
+"""
 
         llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)
         return llm.invoke(prompt).content
