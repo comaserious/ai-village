@@ -102,22 +102,33 @@ def save_conversation_to_chroma(memory, conversation_id, user_id, persona_name):
             conversation_text.append(f"내용: {msg.content}")
             conversation_text.append("-" * 50)
         
+        # 대화 내용이 있는지 확인
+        if not conversation_text:
+            return "저장할 대화 내용이 없습니다."
+            
+        # 텍스트 파일에 저장
         with open(text_path, 'a', encoding='utf-8') as f:
             f.write(f"\n세션 ID: {conversation_id}\n")
             f.write("\n".join(conversation_text))
             f.write("\n\n")
         
+        # Chroma에 저장
         new_doc = Document(
             page_content="\n".join(conversation_text),
             metadata={
                 "session_id": conversation_id,
                 "user_id": user_id,
-                "persona_name": persona_name
+                "persona_name": persona_name,
+                "timestamp": str(datetime.now())
             }
         )
+        
+        # vectorstore와 store에 저장
         process_and_store_documents([new_doc], vectorstore, store, user_id, persona_name)
         
+        print(f"대화 내용이 {text_path}에 저장되었습니다.")
         return "대화 내용이 성공적으로 저장되었습니다."
+        
     except Exception as e:
         print(f"저장 중 오류 발생: {e}")
         return f"저장 중 오류가 발생했습니다: {str(e)}"
@@ -383,16 +394,30 @@ Final Answer: (관찰 결과에 따른 응답)
 #         tool_names=tool_names
 #     )
 
-def run_conversation(user_id: str, persona: Persona , message : str):
+def run_conversation(user_id: str, persona: Persona, message: str):
     """특정 사용자와 페르소나의 대화 세션 실행"""
-
     
     persona_name = persona.name
     conversation_id = f"{user_id}_{persona_name}_session"
+    
+    # 즉시 저장을 위한 파일 경로
+    base_path = Path(f"memory_storage/{user_id}/{persona_name}")
+    base_path.mkdir(parents=True, exist_ok=True)
+    conversation_path = base_path / "conversation.txt"
+    
+    # 사용자 메시지 즉시 저장
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(conversation_path, 'a', encoding='utf-8') as f:
+        f.write(f"\n시간: {timestamp}\n")
+        f.write(f"발화자: 사용자\n")
+        f.write(f"내용: {message}\n")
+        f.write("-" * 50 + "\n")
+    
     memory = InMemoryChatMessageHistory(session_id=conversation_id)
+    memory.add_user_message(message)
+    
     tools = create_tools(user_id, persona_name, persona)
     tool_names = [tool.name for tool in tools]
-    
     
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.7)  # 더 다양한 응답을 위해 temperature 조정
     agent = create_react_agent(llm, tools, prompt)
@@ -414,30 +439,37 @@ def run_conversation(user_id: str, persona: Persona , message : str):
 
     config = {"configurable": {"session_id": conversation_id}}
 
-    # while True:
-    #     question = input("질문을 입력해주세요 : ")
-    #     result = agent_with_history.invoke({
-    #         "input": question
-    #     }, config=config)
-
-    #     print("==========================대답==============================")
-    #     print(result['output'])
-
-    #     if question.lower() == "exit":
-    #         save_result = save_conversation_to_chroma(memory, conversation_id, user_id, persona_name)
-    #         print(save_result)
-    #         break
-
     result = agent_with_history.invoke({
         "input": message
     }, config=config)
-
-    print('result : ', result['output'])
-
-    if message.lower() == "exit":
-        save_result = save_conversation_to_chroma(memory, conversation_id, user_id, persona_name)
-        print(save_result)
-
+    
+    # AI 응답 즉시 저장
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    with open(conversation_path, 'a', encoding='utf-8') as f:
+        f.write(f"\n시간: {timestamp}\n")
+        f.write(f"발화자: {persona_name}\n")
+        f.write(f"내용: {result['output']}\n")
+        f.write("-" * 50 + "\n")
+    
+    memory.add_ai_message(result['output'])
+    
+    # Chroma에도 즉시 저장
+    new_doc = Document(
+        page_content=f"사용자: {message}\n{persona_name}: {result['output']}",
+        metadata={
+            "session_id": conversation_id,
+            "user_id": user_id,
+            "persona_name": persona_name,
+            "timestamp": timestamp
+        }
+    )
+    
+    try:
+        process_and_store_documents([new_doc], vectorstore, store, user_id, persona_name)
+        print(f"대화가 성공적으로 저장되었습니다: {conversation_path}")
+    except Exception as e:
+        print(f"Chroma 저장 중 오류 발생: {e}")
+    
     return result['output']
 
 # if __name__ == "__main__":
