@@ -11,13 +11,85 @@ from spatial_memory.maze import map_matrix, zone_labels
 
 load_dotenv()
 
-user  = json.load(open('test.json'))
+# user  = json.load(open('test.json'))
+
+from firebase_admin import firestore
+import firebase_admin
+from firebase_admin import credentials
+
+from firebase_config import db
 
 def first_day_persona(name , user):
 
+    doc_ref = db.collection('users').document(user['uid'])
+
+    doc = doc_ref.get()
+
+    user_data = doc.to_dict()
+
+    print("ddd",user_data)
+
+    prompt = ""
+
+    if name == 'Clone':
+        data = user_data['persona']
+
+        data = list(filter(lambda x: x['Name'] == 'clone', data))
+
+        data = data[0]
+
+        print('=========================clone=====================')
+
+        prompt =  f"""
+            # Input
+            당신은 캐릭터를 만들어주는 소설가입니다.
+            인사이드 아웃처럼 한 사람의 성격을 매우 극단적으로 만들려고 계획하고 있습니다
+            캐릭터의 이름은 { name } 이고, 이번 캐릭터의 MBTI 는 { user['profile']['mbti'] } 입니다.
+            description 은 { data['description'] } 입니다.
+            speech 는 { data['tone'] } 입니다.
+            speech 예시로는 {data['example']} 입니다.
+            다음 Exam 처럼 Output 을 작성하고 json 형태로 값을 출력해줘.
+            
+            # Exam
+            name : { name }
+            age : 나이를 적어주세요.
+            personality : 기본적인 성격을 작성해주세요. 예를들어 매우 활달하고 사교성이 높으며 항상 행복한 상태입니다.
+            speech : 캐릭터의 말투를 작성해주세요.
+            lifestyle : 일반적인 생활 패턴을 적어주세요. 예를들어 6시에 일어나서 11시에 취침합니다. 주말과 주중의 lifestyle 을 구별에서 작성해주세요.
+            gender : 성별을 작성 해주세요.
+            character : 캐릭터의 기본적인 생활 태도를 작성해주세요.
+            """
+    elif name == 'Custom':
+        data = user_data['persona']
+
+        data = list(filter(lambda x: x['Name'] == 'custom', data))
+
+        data = data[0]
+        
+        print('=========================custom=====================')
+
+        prompt =  f"""
+            # Input
+            당신은 캐릭터를 만들어주는 소설가입니다.
+            인사이드 아웃처럼 한 사람의 성격을 매우 극단적으로 만들려고 계획하고 있습니다
+            캐릭터의 이름은 { name } 이고, 이번 캐릭터의 MBTI 는 { user['profile']['mbti'] } 입니다.
+            description 은 { data['description'] } 입니다.
+            speech 는 { data['tone'] } 입니다.
+            speech 예시로는 {data['example']} 입니다.
+            다음 Exam 처럼 Output 을 작성하고 json 형태로 값을 출력해줘.
+            
+            # Exam
+            name : { name }
+            age : 나이를 적어주세요.
+            personality : 기본적인 성격을 작성해주세요. 예를들어 매우 활달하고 사교성이 높으며 항상 행복한 상태입니다.
+            speech : 캐릭터의 말투를 작성해주세요.
+            lifestyle : 일반적인 생활 패턴을 적어주세요. 예를들어 6시에 일어나서 11시에 취침합니다. 주말과 주중의 lifestyle 을 구별에서 작성해주세요.
+            gender : 성별을 작성 해주세요.
+            character : 캐릭터의 기본적인 생활 태도를 작성해주세요.
+            """
     
-    
-    prompt = f"""
+    else:
+        prompt = f"""
             # Input
             당신은 캐릭터를 만들어주는 소설가입니다.
             인사이드 아웃처럼 한 사람의 성격을 매우 극단적으로 만들려고 계획하고 있습니다
@@ -385,13 +457,13 @@ def make_persona_association(personas, user):
                     "potential_conflicts": ["{persona1.name}이 특히 민감하게 느끼는 갈등 요소들"]
                 }}
                 
-                각 페르소나의 성격과 MBTI 특성을 깊이 반영하여, 비대칭적이고 독특한 관계를 설정해주세요.
+                각 페르소나의 성격과 특성을 깊이 반영하여, 비대칭적이고 독특한 관계를 설정해주세요.
                 JSON 형식만 응답해주세요.
                 """
                 
                 llm = ChatOpenAI(
                     temperature=1,
-                    model="gpt-4-0125-preview"
+                    model="gpt-4o-mini"
                 )
                 
                 try:

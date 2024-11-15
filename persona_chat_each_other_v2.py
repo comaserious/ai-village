@@ -5,12 +5,15 @@ from typing import List, Dict
 import time
 import random
 from datetime import datetime
+import json
 
 from persona import Persona
 
 from firebase_admin import firestore
 import firebase_admin
 from firebase_admin import credentials
+
+
 
 
 
@@ -218,11 +221,54 @@ class ConversationSimulation:
         # 가중치를 기반으로 초기 화자 선택
         return random.choices(agents_list, weights=weights, k=1)[0]
 
+    def update_relationship(self, conversation_summary: str, speaker: str, listener: str):
+        """대화 내용을 바탕으로 관계 정보 업데이트"""
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+        
+        # relationships.json 읽기
+        json_path = f"memory_storage/{self.uid}/relationships.json"
+        with open(json_path, 'r', encoding='utf-8') as file:
+            relationships = json.load(file)
+        
+        prompt = f"""
+        다음은 {speaker}와 {listener} 사이의 대화 요약입니다:
+        {conversation_summary}
+        
+        현재 두 페르소나의 관계 정보:
+        {json.dumps(relationships[speaker][listener], ensure_ascii=False, indent=2)}
+        
+        이 대화를 바탕으로 두 페르소나의 관계 변화를 분석하고, 다음 항목들을 업데이트해주세요:
+        1. closeness (1-10 사이의 숫자)
+        2. dynamics (관계 역학)
+        3. potential_conflicts (잠재적 갈등 요소)
+        
+        JSON 형식으로만 응답해주세요.
+        """
+        
+        try:
+            response = llm.invoke(prompt)
+            updates = json.loads(response.content)
+            
+            # 관계 정보 업데이트
+            relationships[speaker][listener].update(updates)
+            relationships[listener][speaker].update(updates)  # 양방향 업데이트
+            
+            # 파일 저장
+            with open(json_path, 'w', encoding='utf-8') as file:
+                json.dump(relationships, file, ensure_ascii=False, indent=2)
+                
+            print(f"\n{speaker}와 {listener}의 관계가 업데이트되었습니다.")
+            
+        except Exception as e:
+            print(f"관계 업데이트 중 오류 발생: {str(e)}")
+
     def simulate_conversation(self, turns: int = 10):
         # 참여자 이름만으로 conversation_id 생성
         participants = sorted([agent.name for agent in self.agents.values()])
         conversation_id = f"{'-'.join(participants)}"
         
+        turns = random.randint(4,10)
+
         path = f"village/convo/{self.uid}"
         
         # 대화 시작 시간을 별도 필드로 저장
@@ -242,6 +288,11 @@ class ConversationSimulation:
         print(f"\n=== 대화 시작 ===")
         print(f"{initial_speaker.name}: {initial_message}")
         
+        convo_data= []
+        convo_data.append({
+            'speaker': initial_speaker.name,
+            'message': initial_message
+        })
         # 초기 메시지 저장
         self.save_conversation(
             conversation_id=conversation_id,
@@ -253,6 +304,7 @@ class ConversationSimulation:
         current_message = initial_message
         turn_count = 0
         
+
         while turn_count < turns:
             speakers = list(self.agents.keys())
             current_idx = speakers.index(current_speaker)
@@ -260,6 +312,10 @@ class ConversationSimulation:
             
             response = self.agents[next_speaker].receive_message(current_message, current_speaker)
             
+            convo_data.append({
+                'speaker': next_speaker,
+                'message': response
+            })
             time.sleep(0.5)
             print(f"{next_speaker}: {response}")
             
@@ -280,5 +336,20 @@ class ConversationSimulation:
             
             if turn_count >= turns:
                 print(f"\n=== {turns}턴의 대화가 완료되었습니다 ===")
+        
+        # 대화가 끝난 후 관계 업데이트를 위한 대화 요약
+        llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+        conversation_summary_prompt = f"""
+        다음 대화를 요약해주세요:
+        {convo_data}
+        
+        주요 감정 변화와 상호작용을 중심으로 요약해주세요.
+        """
+        
+        conversation_summary = llm.invoke(conversation_summary_prompt).content
+        
+        # 관계 정보 업데이트
+        participants = list(self.agents.keys())
+        self.update_relationship(conversation_summary, participants[0], participants[1])
 
 

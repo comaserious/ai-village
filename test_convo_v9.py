@@ -24,6 +24,7 @@ import os
 from pathlib import Path
 import pickle
 import hashlib
+import json
 
 from persona import Persona
 PERSIST_DIRECTORY = "./chroma_db"
@@ -243,6 +244,24 @@ Remember to:
         return llm.invoke(prompt).content
     return general_chat
 
+def create_get_current_zone(persona: Persona):
+    """Create get current zone tool with persona"""
+    def get_current_zone(query: str) -> str:
+        # scratch.json에서 현재 위치 가져오기
+        json_file_path = f"memory_storage/{persona.uid}/{persona.name}/scratch.json"
+        try:
+            with open(json_file_path, 'r') as file:
+                scratch_data = json.load(file)
+                current_zone = scratch_data.get('currentZone', 'unknown')
+                
+            return f"현재 {persona.name}은(는) {current_zone}에 있습니다."
+        except Exception as e:
+            print(f"위치 정보 읽기 실패: {e}")
+            # 실패 시 current_location에서 가져오기 (fallback)
+            return f"현재 {persona.name}은(는) {persona.current_location['zone']}에 있습니다."
+    
+    return get_current_zone
+
 # Tools 정의
 def create_tools(user_id: str, persona_name: str, persona: Persona):
     """사용자와 페르소나별 도구 생성"""
@@ -261,6 +280,11 @@ def create_tools(user_id: str, persona_name: str, persona: Persona):
             name="general_chat", 
             description="General conversation", 
             func=create_general_chat(persona)
+        ),
+        Tool(
+            name="get_current_zone",
+            description="Get the current location zone of the persona",
+            func=create_get_current_zone(persona)
         ),
     ]
 
@@ -302,6 +326,7 @@ Final Answer: (관찰 결과에 따른 응답)
 1. search_conversation: 이전 대화 내용 필요시
 2. search_web: 최신 정보나 외부 정보 필요시
 3. general_chat: 일반적인 대화나 질문일 때
+4. get_current_zone: 현재 위치 정보 필요시
 
 사용 가능한 도구:
 {tools}

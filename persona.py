@@ -23,6 +23,7 @@ class Persona:
         self.scratch = Scratch(scratch_saved)
         self.spatial_memory = SpatialMemory(map_matrix, zone_labels)
         self.daily_plan_count = 0 
+        self.uid = user['uid']
 
         self.relationships = self._load_my_relationships(user['uid'])
 
@@ -105,6 +106,21 @@ class Persona:
 
     def get_daily_req(self):
         return self.scratch.get_daily_req()
+
+    def update_current_zone(self, zone: str):
+        self.scratch.currentZone = zone  # scratch 객체에 currentZone 필드 추가
+        
+        # scratch.json 파일 업데이트
+        json_file_path = f"memory_storage/{self.uid}/{self.name}/scratch.json"
+        with open(json_file_path, 'r+') as file:
+            scratch_data = json.load(file)
+            scratch_data['currentZone'] = zone
+            file.seek(0)
+            json.dump(scratch_data, file, indent=4)
+            file.truncate()
+
+    def get_current_zone(self):
+        return self.scratch.currentZone
 
 
         

@@ -16,17 +16,14 @@ from spatial_memory.maze import *
 from persona import *
 from persona_chat_each_other_v2 import *
 
+from firebase_config import db
+
 
 load_dotenv()
 
-cred = credentials.Certificate("mirrorgram-20713-firebase-adminsdk-u9pdx-c3e12134b4.json")
-firebase_admin.initialize_app(cred,{
-    'storageBucket' : 'mirrorgram-20713.appspot.com'
-})
-
 app = FastAPI()
 
-db = firestore.client()
+
 
 @app.post("/")
 def read_root():
@@ -49,6 +46,13 @@ async def start(request: Request):
         Persona("Clone", data),
         Persona("Custom", data)
     ]
+
+    relationships = f"memory_storage/{uid}/relationships.json"
+
+    if not os.path.exists(relationships):
+        make_persona_association(personas, data)
+
+    
 
     for persona in personas:
         activities = []
@@ -144,11 +148,12 @@ async def chat_persona(request : Request):
         y = character['position']['y']
         current_zone = spatial_memory.get_zone_at_position(x, y)
         
-        # persona에 위치 정보 저장
+        # persona에 위치 정보 저장 및 scratch.json 업데이트
         persona.current_location = {
             'coordinates': character['position'],
             'zone': current_zone
         }
+        persona.update_current_zone(current_zone)
         
         personas.append(persona)
 
